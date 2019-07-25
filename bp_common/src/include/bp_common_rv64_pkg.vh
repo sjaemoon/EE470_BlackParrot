@@ -59,12 +59,24 @@ package bp_common_rv64_pkg;
 
   typedef struct packed
   {
+    logic                              imm12;
+    logic [10:5]                       imm10to5;
+    logic [rv64_reg_addr_width_gp-1:0] rs2;
+    logic [rv64_reg_addr_width_gp-1:0] rs1;
+    logic [rv64_funct3_width_gp-1:0]   funct3;
+    logic [4:1]                        imm4to1;
+    logic                              imm11;
+  }  rv64_instr_btype_s;
+
+  typedef struct packed
+  {
     union packed
     {
       rv64_instr_rtype_s rtype;
       rv64_instr_itype_s itype;
       rv64_instr_stype_s stype;
       rv64_instr_utype_s utype;
+      rv64_instr_btype_s btype;
     }  fields;
     logic [rv64_opcode_width_gp-1:0]   opcode;
   }  rv64_instr_s;
