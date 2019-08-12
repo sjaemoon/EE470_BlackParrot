@@ -149,6 +149,7 @@ module bp_core
      ,.yumi_i(fe_queue_yumi_li)
      );
 
+
   bp_be_top 
    #(.bp_params_p(bp_params_p))
    be
@@ -163,7 +164,6 @@ module bp_core
 
      ,.fe_queue_deq_o(fe_queue_deq_li)
      ,.fe_queue_roll_o(fe_queue_roll_li)
-
      ,.fe_queue_i(fe_queue_lo)
      ,.fe_queue_v_i(~fe_fence_r & fe_queue_v_lo)
      ,.fe_queue_yumi_o(fe_queue_yumi_li)
