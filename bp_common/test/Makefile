@@ -65,6 +65,8 @@ riscv_elf:
 	find $(TEST_DIR)/src/riscv-tests/isa/ -executable -name "rv64mi-*" -execdir mv {} $(MEM_DIR)/{}.riscv \;
 	find $(TEST_DIR)/src/riscv-tests/isa/ -executable -name "rv64si-*" -execdir mv {} $(MEM_DIR)/{}.riscv \;
 	find $(TEST_DIR)/src/riscv-tests/isa/ -executable -name "rv64um-*" -execdir mv {} $(MEM_DIR)/{}.riscv \;
+	find $(TEST_DIR)/src/riscv-tests/isa/ -executable -name "rv64uf-*" -execdir mv {} $(MEM_DIR)/{}.riscv \;
+	find $(TEST_DIR)/src/riscv-tests/isa/ -executable -name "rv64ud-*" -execdir mv {} $(MEM_DIR)/{}.riscv \;
 	find $(TEST_DIR)/src/riscv-tests/benchmarks/ -type f -executable -execdir mv {} $(MEM_DIR)/{} \;
 
 coremark_elf:
@@ -170,7 +172,7 @@ riscvdv_dump: $(foreach x, $(BP_RVDV), $(x).dump)
 	$(RISCV_OBJDUMP) $(MEM_DIR)/$*.riscv > $(MEM_DIR)/$@
 
 %.spike:
-	$(RISCV_SIM) --isa=rv64ima -p$(NC) --log-commits $(MEM_DIR)/$*.riscv 2> $(MEM_DIR)/$@
+	$(RISCV_SIM) --isa=rv64imafd -p$(NC) --log-commits $(MEM_DIR)/$*.riscv 2> $(MEM_DIR)/$@
 
 %.dump:
 	$(RISCV_OBJDUMP) $(MEM_DIR)/$*.riscv > $(MEM_DIR)/$@

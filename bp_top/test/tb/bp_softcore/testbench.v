@@ -159,9 +159,13 @@ bind bp_be_top
      ,.commit_pc_i(be_calculator.commit_pkt.pc)
      ,.commit_instr_i(be_calculator.commit_pkt.instr)
 
-     ,.rd_w_v_i(be_checker.scheduler.wb_pkt.rd_w_v)
-     ,.rd_addr_i(be_checker.scheduler.wb_pkt.rd_addr)
-     ,.rd_data_i(be_checker.scheduler.wb_pkt.rd_data)
+     ,.int_rd_w_v_i(be_checker.scheduler.int_wb_pkt.rd_w_v)
+     ,.int_rd_addr_i(be_checker.scheduler.int_wb_pkt.rd_addr)
+     ,.int_rd_data_i(be_checker.scheduler.int_wb_pkt.rd_data)
+
+     ,.fp_rd_w_v_i(be_checker.scheduler.fp_wb_pkt.rd_w_v)
+     ,.fp_rd_addr_i(be_checker.scheduler.fp_wb_pkt.rd_addr)
+     ,.fp_rd_data_i(be_checker.scheduler.fp_wb_pkt.rd_data)
      );
 
   bind bp_be_top
@@ -185,9 +189,13 @@ bind bp_be_top
        ,.commit_pc_i(be_calculator.commit_pkt.pc)
        ,.commit_instr_i(be_calculator.commit_pkt.instr)
 
-       ,.rd_w_v_i(be_checker.scheduler.wb_pkt.rd_w_v)
-       ,.rd_addr_i(be_checker.scheduler.wb_pkt.rd_addr)
-       ,.rd_data_i(be_checker.scheduler.wb_pkt.rd_data)
+       ,.int_rd_w_v_i(be_checker.scheduler.int_wb_pkt.rd_w_v)
+       ,.int_rd_addr_i(be_checker.scheduler.int_wb_pkt.rd_addr)
+       ,.int_rd_data_i(be_checker.scheduler.int_wb_pkt.rd_data)
+
+       ,.fp_rd_w_v_i(be_checker.scheduler.fp_wb_pkt.rd_w_v)
+       ,.fp_rd_addr_i(be_checker.scheduler.fp_wb_pkt.rd_addr)
+       ,.fp_rd_data_i(be_checker.scheduler.fp_wb_pkt.rd_data)
 
        ,.interrupt_v_i(be_mem.csr.trap_pkt_cast_o._interrupt)
        ,.cause_i(be_mem.csr.trap_pkt_cast_o.cause)
@@ -282,15 +290,13 @@ bind bp_be_top
        ,.issue_pkt_i(be_checker.scheduler.issue_pkt)
        ,.issue_pkt_v_i(be_checker.scheduler.fe_queue_yumi_o)
 
-       ,.fe_nop_v_i(be_calculator.exc_stage_n[0].fe_nop_v)
-       ,.be_nop_v_i(be_calculator.exc_stage_n[0].be_nop_v)
-       ,.me_nop_v_i(be_calculator.exc_stage_n[0].me_nop_v)
+       ,.nop_v_i(be_calculator.exc_stage_n[0].nop_v)
        ,.dispatch_pkt_i(be_calculator.dispatch_pkt)
 
        ,.ex1_br_tgt_i(be_calculator.calc_status.ex1_npc)
        ,.ex1_btaken_i(be_calculator.pipe_int.btaken)
-       ,.iwb_result_i(be_calculator.comp_stage_n[3])
-       ,.fwb_result_i(be_calculator.comp_stage_n[4])
+       ,.iwb_result_i(be_calculator.comp_stage_n[4].data)
+       ,.fwb_result_i(be_calculator.comp_stage_n[5].data)
 
        ,.cmt_trace_exc_i(be_calculator.exc_stage_n[1+:5])
 

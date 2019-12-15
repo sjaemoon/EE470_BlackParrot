@@ -25,9 +25,13 @@ module bp_nonsynth_cosim
     , input [vaddr_width_p-1:0]               commit_pc_i
     , input [instr_width_p-1:0]               commit_instr_i
 
-    , input                                   rd_w_v_i
-    , input [rv64_reg_addr_width_gp-1:0]      rd_addr_i
-    , input [dword_width_p-1:0]               rd_data_i
+    , input                                   int_rd_w_v_i
+    , input [rv64_reg_addr_width_gp-1:0]      int_rd_addr_i
+    , input [dword_width_p-1:0]               int_rd_data_i
+
+    , input                                   fp_rd_w_v_i
+    , input [rv64_reg_addr_width_gp-1:0]      fp_rd_addr_i
+    , input [dword_width_p-1:0]               fp_rd_data_i
 
     , input                                   interrupt_v_i
     , input [dword_width_p-1:0]               cause_i
@@ -65,7 +69,7 @@ always_ff @(negedge reset_i)
   logic                     interrupt_v_r;
   logic [dword_width_p-1:0] cause_r;
   logic commit_fifo_v_lo, commit_fifo_yumi_li;
-  wire commit_rd_w_v_li = decode_r.irf_w_v | decode_r.pipe_long_v;
+  wire commit_rd_w_v_li = decode_r.irf_w_v | decode_r.frf_w_v | decode_r.pipe_long_v;
   bsg_fifo_1r1w_small
    #(.width_p(1+vaddr_width_p+instr_width_p+2+dword_width_p), .els_p(8))
    commit_fifo
@@ -80,7 +84,7 @@ always_ff @(negedge reset_i)
      ,.v_o(commit_fifo_v_lo)
      ,.yumi_i(commit_fifo_yumi_li)
      );
-  assign commit_fifo_yumi_li = commit_fifo_v_lo & (interrupt_v_r | ~commit_rd_w_v_r | (commit_rd_w_v_r & rd_w_v_i));
+  assign commit_fifo_yumi_li = commit_fifo_v_lo & (interrupt_v_r | ~commit_rd_w_v_r | (commit_rd_w_v_r & (int_rd_w_v_i | fp_rd_w_v_i)));
 
   logic [`BSG_SAFE_CLOG2(max_instr_lp+1)-1:0] instr_cnt;
   bsg_counter_clear_up
@@ -100,7 +104,7 @@ always_ff @(negedge reset_i)
         dromajo_trap(mhartid_i, cause_r);
       end
       else if (commit_fifo_yumi_li & commit_v_r & commit_pc_r != '0) begin
-        dromajo_step(mhartid_i, 64'($signed(commit_pc_r)), commit_instr_r, rd_data_i);
+        dromajo_step(mhartid_i, 64'($signed(commit_pc_r)), commit_instr_r, int_rd_w_v_i ? int_rd_data_i : fp_rd_data_i);
       end
 
       if ((cosim_instr_i != '0) && (instr_cnt >= cosim_instr_i)) begin

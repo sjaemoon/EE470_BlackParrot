@@ -36,9 +36,7 @@ module bp_be_nonsynth_calc_tracer
    , input                                                 issue_pkt_v_i
 
    , input [dispatch_pkt_width_lp-1:0]                     dispatch_pkt_i
-   , input                                                 fe_nop_v_i
-   , input                                                 be_nop_v_i
-   , input                                                 me_nop_v_i
+   , input                                                 nop_v_i
 
    , input [vaddr_width_p-1:0]                             ex1_br_tgt_i
    , input                                                 ex1_btaken_i

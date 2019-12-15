@@ -93,6 +93,7 @@ module bp_softcore
      ,.cfg_bus_i(cfg_bus_li)
      ,.cfg_npc_data_o()
      ,.cfg_irf_data_o()
+     ,.cfg_frf_data_o()
      ,.cfg_csr_data_o()
      ,.cfg_priv_data_o()
 

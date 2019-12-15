@@ -50,5 +50,5 @@ always_ff @(negedge clk_i)
       end
   end
 
-endmodule : bp_be_nonsynth_perf
+endmodule
 
