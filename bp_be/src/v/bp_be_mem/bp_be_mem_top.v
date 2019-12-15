@@ -98,6 +98,9 @@ module bp_be_mem_top
    , output [trap_pkt_width_lp-1:0]          trap_pkt_o
    , output                                  tlb_fence_o
    , output                                  fencei_o
+
+   , output [2:0]                            frm_o
+   , input [4:0]                             fflags_i
    );
 
 `declare_bp_fe_be_if(vaddr_width_p, paddr_width_p, asid_width_p, branch_metadata_fwd_width_p);
@@ -265,6 +268,8 @@ bp_be_csr
    ,.translation_en_o(translation_en_lo)
    ,.mstatus_sum_o(mstatus_sum_lo)
    ,.mstatus_mxr_o(mstatus_mxr_lo)
+   ,.frm_o(frm_o)
+   ,.fflags_i(fflags_i)
    ,.tlb_fence_o(tlb_fence_o)
    ,.fencei_o(fencei_o)
 
