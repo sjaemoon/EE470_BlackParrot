@@ -88,7 +88,7 @@ logic                  nbf_cmd_v_lo, nbf_cmd_ready_li;
 bp_cce_mem_msg_s       nbf_resp_li;
 logic                  nbf_resp_v_li, nbf_resp_ready_lo;
 
-wire [io_noc_did_width_p-1:0] dram_did_li = '1;
+wire [io_noc_did_width_p-1:0] host_did_li = '1;
 wire [io_noc_did_width_p-1:0] proc_did_li = 1;
 
 bp_io_noc_ral_link_s stub_cmd_link_li, stub_resp_link_li;
@@ -112,6 +112,7 @@ wrapper
    ,.mem_clk_i(clk_i)
    ,.mem_reset_i(reset_i)
 
+   ,.host_did_i(host_did_li)
    ,.my_did_i(proc_did_li)
 
    ,.io_cmd_link_i({proc_cmd_link_li, stub_cmd_link_li})
@@ -338,7 +339,7 @@ bp_me_cce_to_mem_link_bidir
    ,.mem_resp_v_o(load_resp_v_li)
    ,.mem_resp_yumi_i(load_resp_yumi_lo)
 
-   ,.my_cord_i(io_noc_cord_width_p'(dram_did_li))
+   ,.my_cord_i(io_noc_cord_width_p'(host_did_li))
    ,.my_cid_i('0)
    ,.dst_cord_i(dst_cord_lo)
    ,.dst_cid_i('0)

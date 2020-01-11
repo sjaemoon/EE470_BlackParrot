@@ -24,6 +24,7 @@ module bp_io_tile_node
    , input                                       io_clk_i
    , input                                       io_reset_i
 
+   , input [io_noc_did_width_p-1:0]              host_did_i
    , input [io_noc_did_width_p-1:0]              my_did_i
    , input [coh_noc_cord_width_p-1:0]            my_cord_i
 
@@ -60,6 +61,7 @@ module bp_io_tile_node
     (.clk_i(core_clk_i)
      ,.reset_i(core_reset_i)
   
+     ,.host_did_i(host_did_i)
      ,.my_did_i(my_did_i)
      ,.my_cord_i(my_cord_i)
 

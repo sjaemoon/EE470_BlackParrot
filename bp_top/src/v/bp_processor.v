@@ -36,6 +36,7 @@ module bp_processor
    , input                                          mem_clk_i
    , input                                          mem_reset_i
 
+   , input [io_noc_did_width_p-1:0]                 host_did_i
    , input [io_noc_did_width_p-1:0]                 my_did_i
 
    , input  [E:W][io_noc_ral_link_width_lp-1:0]     io_cmd_link_i
@@ -122,6 +123,7 @@ bp_io_complex
    ,.io_clk_i(io_clk_i)
    ,.io_reset_i(io_reset_i)
 
+   ,.host_did_i(host_did_i)
    ,.my_did_i(my_did_i)
 
    ,.coh_req_link_i(coh_req_ver_link_lo[N])
