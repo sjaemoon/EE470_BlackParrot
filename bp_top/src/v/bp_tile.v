@@ -29,6 +29,7 @@ module bp_tile
    , input                                                    reset_i
 
    // Memory side connection
+   , input [io_noc_did_width_p-1:0]                           host_did_i
    , input [io_noc_did_width_p-1:0]                           my_did_i
    , input [coh_noc_cord_width_p-1:0]                         my_cord_i
 
@@ -132,6 +133,7 @@ bp_cfg_buffered
    ,.mem_resp_yumi_i(cfg_mem_resp_yumi_li)
 
    ,.cfg_bus_o(cfg_bus_lo)
+   ,.host_i(host_did_i)
    ,.did_i(my_did_i)
    ,.cord_i(my_cord_i)
    ,.irf_data_i(cfg_irf_data_li)
@@ -541,7 +543,6 @@ for (genvar i = 0; i < 2; i++)
      ,.mem_resp_yumi_i(dma_mem_resp_ready_lo & dma_mem_resp_v_li)
 
      ,.my_cord_i(my_cord_i[coh_noc_x_cord_width_p+:mem_noc_y_cord_width_p])
-     // TODO: CID == noc cord right now (1 DMC per column)
      ,.my_cid_i(my_cord_i[0+:mem_noc_cid_width_p])
      ,.dst_cord_i(dst_cord_li)
      ,.dst_cid_i('0)

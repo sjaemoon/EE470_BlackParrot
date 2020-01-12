@@ -59,7 +59,7 @@ bp_io_noc_ral_link_s [E:P] cmd_link_li, cmd_link_lo;
 bp_io_noc_ral_link_s [E:P] resp_link_li, resp_link_lo;
 
 bp_cce_mem_msg_s dram_cmd_li;
-logic            dram_cmd_v_li, dram_cmd_yumi_lo;
+logic            dram_cmd_v_li, dram_cmd_ready_lo;
 bp_cce_mem_msg_s dram_resp_lo;
 logic            dram_resp_v_lo, dram_resp_ready_li;
 
@@ -275,11 +275,11 @@ bind bp_be_top
 
      ,.mem_cmd_i(dram_cmd_li)
      ,.mem_cmd_v_i(dram_cmd_v_li)
-     ,.mem_cmd_yumi_i(dram_cmd_yumi_lo)
+     ,.mem_cmd_ready_i(dram_cmd_ready_lo)
 
      ,.mem_resp_i(dram_resp_lo)
      ,.mem_resp_v_i(dram_resp_v_lo)
-     ,.mem_resp_ready_i(dram_resp_ready_li)
+     ,.mem_resp_yumi_i(dram_resp_ready_li & dram_resp_v_lo)
      );
 
   bind bp_cce
@@ -372,7 +372,7 @@ bp_me_cce_to_mem_link_client
 
    ,.mem_cmd_o(dram_cmd_li)
    ,.mem_cmd_v_o(dram_cmd_v_li)
-   ,.mem_cmd_yumi_i(dram_cmd_yumi_lo)
+   ,.mem_cmd_yumi_i(dram_cmd_ready_lo & dram_cmd_v_li)
 
    ,.mem_resp_i(dram_resp_lo)
    ,.mem_resp_v_i(dram_resp_v_lo)
@@ -406,11 +406,11 @@ bp_mem
  
    ,.mem_cmd_i(dram_cmd_li)
    ,.mem_cmd_v_i(dram_cmd_v_li)
-   ,.mem_cmd_yumi_o(dram_cmd_yumi_lo)
+   ,.mem_cmd_ready_o(dram_cmd_ready_lo)
  
    ,.mem_resp_o(dram_resp_lo)
    ,.mem_resp_v_o(dram_resp_v_lo)
-   ,.mem_resp_ready_i(dram_resp_ready_li)
+   ,.mem_resp_yumi_i(dram_resp_ready_li & dram_resp_v_lo)
    );
 
 logic [num_core_p-1:0] program_finish;

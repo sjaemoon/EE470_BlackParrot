@@ -27,8 +27,10 @@ COV  ?= 0
 
 ifeq ($(DUMP), 1)
 VCS_BUILD_OPTS += -debug_all
-VCS_OPTIONS += +vcs+vcdpluson # Enable vcd dump
-VCS_OPTIONS += +memcbk        # Dump memory 
+VCS_OPTIONS += +vcs+vcdpluson          # Enable vcd dump
+VCS_OPTIONS += +vcs+vcdplusmemon       # Enable vcd mem dump
+VCS_OPTIONS += +vcs+vcdplusautoflushon # Enable autoflush
+VCS_OPTIONS += +memcbk                 # Dump memory 
 endif
 
 ifeq ($(COV), 1)

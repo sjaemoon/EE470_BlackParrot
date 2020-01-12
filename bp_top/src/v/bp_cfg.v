@@ -25,6 +25,7 @@ module bp_cfg
 
    , output [cfg_bus_width_lp-1:0]      cfg_bus_o
    , input [coh_noc_cord_width_p-1:0]   cord_i
+   , input [io_noc_did_width_p-1:0]     host_i
    , input [io_noc_did_width_p-1:0]     did_i
    , input [dword_width_p-1:0]          irf_data_i
    , input [vaddr_width_p-1:0]          npc_data_i
@@ -107,6 +108,7 @@ wire enter_debug_li = cfg_w_v_li & (cfg_addr_li == bp_cfg_reg_enter_debug_gp);
 wire exit_debug_li  = cfg_w_v_li & (cfg_addr_li == bp_cfg_reg_exit_debug_gp);
 
 wire cord_r_v_li = cfg_r_v_li & (cfg_addr_li == bp_cfg_reg_cord_gp);
+wire host_r_v_li = cfg_r_v_li & (cfg_addr_li == bp_cfg_reg_host_gp);
 wire did_r_v_li  = cfg_r_v_li & (cfg_addr_li == bp_cfg_reg_did_gp);
 
 wire cce_ucode_w_v_li = cfg_w_v_li & (cfg_addr_li >= 16'h8000);
@@ -204,11 +206,13 @@ assign mem_resp_cast_o = '{msg_type: mem_cmd_cast_i.msg_type
                                          ? csr_data_r
                                          : priv_r_v_li
                                            ? priv_data_i
-                                           : did_r_v_li
-                                             ? did_i
-                                             : cord_r_v_li
-                                               ? cord_i
-                                               : cce_ucode_data_i
+                                           : host_r_v_li
+                                             ? host_i
+                                             : did_r_v_li
+                                               ? did_i
+                                               : cord_r_v_li
+                                                 ? cord_i
+                                                 : cce_ucode_data_i
                            };
 
 endmodule

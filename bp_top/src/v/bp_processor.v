@@ -84,6 +84,7 @@ bp_core_complex
    ,.mem_clk_i(mem_clk_i)
    ,.mem_reset_i(mem_reset_i)
 
+   ,.host_did_i(host_did_i)
    ,.my_did_i(my_did_i)
 
    ,.coh_req_hor_link_i(coh_req_hor_link_li)
