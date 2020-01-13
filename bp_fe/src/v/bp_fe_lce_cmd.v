@@ -181,142 +181,144 @@ module bp_fe_lce_cmd
       end
 
       e_lce_cmd_uncached_only: begin
-        if (lce_cmd_li.msg_type == e_lce_cmd_set_clear) begin
-          tag_mem_pkt.index        = lce_cmd_addr_index;
-          tag_mem_pkt.state        = e_COH_I;
-          tag_mem_pkt.tag          = '0;
-          tag_mem_pkt.opcode       = e_tag_mem_set_clear;
-          tag_mem_pkt_v_o          = lce_cmd_v_i;
-          stat_mem_pkt.index       = lce_cmd_addr_index;
-          stat_mem_pkt.opcode      = e_stat_mem_set_clear;
-          stat_mem_pkt_v_o         = lce_cmd_v_i;
-          lce_cmd_yumi_o           = tag_mem_pkt_yumi_i & stat_mem_pkt_yumi_i;
+        // Needed for x-pessimism
+        if (lce_cmd_v_i)
+          if (lce_cmd_li.msg_type == e_lce_cmd_set_clear) begin
+            tag_mem_pkt.index        = lce_cmd_addr_index;
+            tag_mem_pkt.state        = e_COH_I;
+            tag_mem_pkt.tag          = '0;
+            tag_mem_pkt.opcode       = e_tag_mem_set_clear;
+            tag_mem_pkt_v_o          = lce_cmd_v_i;
+            stat_mem_pkt.index       = lce_cmd_addr_index;
+            stat_mem_pkt.opcode      = e_stat_mem_set_clear;
+            stat_mem_pkt_v_o         = lce_cmd_v_i;
+            lce_cmd_yumi_o           = tag_mem_pkt_yumi_i & stat_mem_pkt_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_sync) begin
-          lce_resp.dst_id = lce_cmd_li.msg.cmd.src_id;
-          lce_resp.msg_type = e_lce_cce_sync_ack;
-          lce_resp_v_o = lce_cmd_v_i;
-          lce_cmd_yumi_o = lce_resp_yumi_i;
-          state_n = ((cnt_r == cnt_width_lp'(num_cce_p-1)) & lce_resp_yumi_i)
-            ? e_lce_cmd_ready
-            : e_lce_cmd_uncached_only;
-          // clear counter when moving to ready state
-          cnt_clear = (state_n == e_lce_cmd_ready);
-          // only increment counter when staying in uncached_only state and waiting for more
-          // sync messages, and when the lce_resp is sent
-          cnt_inc = ~cnt_clear & lce_resp_yumi_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_sync) begin
+            lce_resp.dst_id = lce_cmd_li.msg.cmd.src_id;
+            lce_resp.msg_type = e_lce_cce_sync_ack;
+            lce_resp_v_o = lce_cmd_v_i;
+            lce_cmd_yumi_o = lce_resp_yumi_i;
+            state_n = ((cnt_r == cnt_width_lp'(num_cce_p-1)) & lce_resp_yumi_i)
+              ? e_lce_cmd_ready
+              : e_lce_cmd_uncached_only;
+            // clear counter when moving to ready state
+            cnt_clear = (state_n == e_lce_cmd_ready);
+            // only increment counter when staying in uncached_only state and waiting for more
+            // sync messages, and when the lce_resp is sent
+            cnt_inc = ~cnt_clear & lce_resp_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_uc_data) begin
-          data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
-          data_mem_pkt.way_id = lce_cmd_li.way_id;
-          data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
-          data_mem_pkt.opcode = e_icache_lce_data_mem_uncached;
-          data_mem_pkt_v_o = lce_cmd_v_i;
-          lce_cmd_yumi_o = data_mem_pkt_yumi_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_uc_data) begin
+            data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
+            data_mem_pkt.way_id = lce_cmd_li.way_id;
+            data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
+            data_mem_pkt.opcode = e_icache_lce_data_mem_uncached;
+            data_mem_pkt_v_o = lce_cmd_v_i;
+            lce_cmd_yumi_o = data_mem_pkt_yumi_i;
 
-          uncached_data_received_o = data_mem_pkt_yumi_i;
-        end
-
+            uncached_data_received_o = data_mem_pkt_yumi_i;
+          end
       end
 
       e_lce_cmd_ready: begin
-        if (lce_cmd_li.msg_type == e_lce_cmd_transfer) begin
-          data_mem_pkt.index  = lce_cmd_addr_index;
-          data_mem_pkt.way_id = lce_cmd_li.way_id;
-          data_mem_pkt.opcode = e_icache_lce_data_mem_read;
-          data_mem_pkt_v_o    = lce_cmd_v_i;
-          state_n             = data_mem_pkt_yumi_i ? e_lce_cmd_send_transfer : e_lce_cmd_ready;
+        // Needed for x-pessimism
+        if (lce_cmd_v_i)
+          if (lce_cmd_li.msg_type == e_lce_cmd_transfer) begin
+            data_mem_pkt.index  = lce_cmd_addr_index;
+            data_mem_pkt.way_id = lce_cmd_li.way_id;
+            data_mem_pkt.opcode = e_icache_lce_data_mem_read;
+            data_mem_pkt_v_o    = lce_cmd_v_i;
+            state_n             = data_mem_pkt_yumi_i ? e_lce_cmd_send_transfer : e_lce_cmd_ready;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_writeback) begin
-          lce_resp.dst_id   = lce_cmd_li.msg.cmd.src_id;
-          lce_resp.msg_type = e_lce_cce_resp_null_wb;
-          lce_resp.addr     = lce_cmd_li.msg.cmd.addr;
-          lce_resp_v_o      = lce_cmd_v_i;
-          lce_cmd_yumi_o    = lce_resp_yumi_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_writeback) begin
+            lce_resp.dst_id   = lce_cmd_li.msg.cmd.src_id;
+            lce_resp.msg_type = e_lce_cce_resp_null_wb;
+            lce_resp.addr     = lce_cmd_li.msg.cmd.addr;
+            lce_resp_v_o      = lce_cmd_v_i;
+            lce_cmd_yumi_o    = lce_resp_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_set_tag) begin
-          tag_mem_pkt.index  = lce_cmd_addr_index;
-          tag_mem_pkt.way_id = lce_cmd_li.way_id;
-          tag_mem_pkt.state  = lce_cmd_li.msg.cmd.state;
-          tag_mem_pkt.tag    = lce_cmd_addr_tag;
-          tag_mem_pkt.opcode = e_tag_mem_set_tag;
-          tag_mem_pkt_v_o    = lce_cmd_v_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_set_tag) begin
+            tag_mem_pkt.index  = lce_cmd_addr_index;
+            tag_mem_pkt.way_id = lce_cmd_li.way_id;
+            tag_mem_pkt.state  = lce_cmd_li.msg.cmd.state;
+            tag_mem_pkt.tag    = lce_cmd_addr_tag;
+            tag_mem_pkt.opcode = e_tag_mem_set_tag;
+            tag_mem_pkt_v_o    = lce_cmd_v_i;
 
-          lce_cmd_yumi_o     = tag_mem_pkt_yumi_i;
-          set_tag_received_o = tag_mem_pkt_yumi_i;
+            lce_cmd_yumi_o     = tag_mem_pkt_yumi_i;
+            set_tag_received_o = tag_mem_pkt_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_set_tag_wakeup) begin
-          tag_mem_pkt.index  = lce_cmd_addr_index;
-          tag_mem_pkt.way_id = lce_cmd_li.way_id;
-          tag_mem_pkt.state  = lce_cmd_li.msg.cmd.state;
-          tag_mem_pkt.tag    = lce_cmd_addr_tag;
-          tag_mem_pkt.opcode = e_tag_mem_set_tag;
-          tag_mem_pkt_v_o    = lce_cmd_v_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_set_tag_wakeup) begin
+            tag_mem_pkt.index  = lce_cmd_addr_index;
+            tag_mem_pkt.way_id = lce_cmd_li.way_id;
+            tag_mem_pkt.state  = lce_cmd_li.msg.cmd.state;
+            tag_mem_pkt.tag    = lce_cmd_addr_tag;
+            tag_mem_pkt.opcode = e_tag_mem_set_tag;
+            tag_mem_pkt_v_o    = lce_cmd_v_i;
 
-          lce_cmd_yumi_o     = tag_mem_pkt_yumi_i;
-          set_tag_wakeup_received_o = tag_mem_pkt_yumi_i;
+            lce_cmd_yumi_o     = tag_mem_pkt_yumi_i;
+            set_tag_wakeup_received_o = tag_mem_pkt_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_invalidate_tag) begin
-          tag_mem_pkt.index = lce_cmd_addr_index;
-          tag_mem_pkt.way_id = lce_cmd_li.way_id;
-          tag_mem_pkt.state = e_COH_I;
-          tag_mem_pkt.opcode = e_tag_mem_invalidate;
-          tag_mem_pkt_v_o = flag_invalidate_r
-            ? 1'b0
-            : lce_cmd_v_i;
-          flag_invalidate_n = lce_resp_yumi_i
-            ? 1'b0
-            : (flag_invalidate_r
-                ? 1'b1  
-                : tag_mem_pkt_yumi_i);
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_invalidate_tag) begin
+            tag_mem_pkt.index = lce_cmd_addr_index;
+            tag_mem_pkt.way_id = lce_cmd_li.way_id;
+            tag_mem_pkt.state = e_COH_I;
+            tag_mem_pkt.opcode = e_tag_mem_invalidate;
+            tag_mem_pkt_v_o = flag_invalidate_r
+              ? 1'b0
+              : lce_cmd_v_i;
+            flag_invalidate_n = lce_resp_yumi_i
+              ? 1'b0
+              : (flag_invalidate_r
+                  ? 1'b1  
+                  : tag_mem_pkt_yumi_i);
 
-          lce_resp.dst_id = lce_cmd_li.msg.cmd.src_id;
-          lce_resp.msg_type = e_lce_cce_inv_ack;
-          lce_resp.addr = lce_cmd_li.msg.cmd.addr;
-          lce_resp_v_o = (flag_invalidate_r | tag_mem_pkt_yumi_i);
-          lce_cmd_yumi_o = lce_resp_yumi_i;
+            lce_resp.dst_id = lce_cmd_li.msg.cmd.src_id;
+            lce_resp.msg_type = e_lce_cce_inv_ack;
+            lce_resp.addr = lce_cmd_li.msg.cmd.addr;
+            lce_resp_v_o = (flag_invalidate_r | tag_mem_pkt_yumi_i);
+            lce_cmd_yumi_o = lce_resp_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_data) begin
-          data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
-          data_mem_pkt.way_id = lce_cmd_li.way_id;
-          data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
-          data_mem_pkt.opcode = e_icache_lce_data_mem_write;
-          data_mem_pkt_v_o = lce_cmd_v_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_data) begin
+            data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
+            data_mem_pkt.way_id = lce_cmd_li.way_id;
+            data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
+            data_mem_pkt.opcode = e_icache_lce_data_mem_write;
+            data_mem_pkt_v_o = lce_cmd_v_i;
 
-          tag_mem_pkt.index  = miss_addr_i[block_offset_width_lp+:index_width_lp];
-          tag_mem_pkt.way_id = lce_cmd_li.way_id;
-          tag_mem_pkt.state  = lce_cmd_li.msg.dt_cmd.state;
-          tag_mem_pkt.tag    = lce_cmd_li.msg.dt_cmd.addr[block_offset_width_lp+index_width_lp+:tag_width_lp];
-          tag_mem_pkt.opcode = e_tag_mem_set_tag;
-          tag_mem_pkt_v_o    = lce_cmd_v_i;
+            tag_mem_pkt.index  = miss_addr_i[block_offset_width_lp+:index_width_lp];
+            tag_mem_pkt.way_id = lce_cmd_li.way_id;
+            tag_mem_pkt.state  = lce_cmd_li.msg.dt_cmd.state;
+            tag_mem_pkt.tag    = lce_cmd_li.msg.dt_cmd.addr[block_offset_width_lp+index_width_lp+:tag_width_lp];
+            tag_mem_pkt.opcode = e_tag_mem_set_tag;
+            tag_mem_pkt_v_o    = lce_cmd_v_i;
 
-          lce_cmd_yumi_o     = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
+            lce_cmd_yumi_o     = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
 
-          cce_data_received_o = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
-          set_tag_received_o  = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
+            cce_data_received_o = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
+            set_tag_received_o  = tag_mem_pkt_yumi_i & data_mem_pkt_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_uc_data) begin
-          data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
-          data_mem_pkt.way_id = lce_cmd_li.way_id;
-          data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
-          data_mem_pkt.opcode = e_icache_lce_data_mem_uncached;
-          data_mem_pkt_v_o = lce_cmd_v_i;
-          lce_cmd_yumi_o = data_mem_pkt_yumi_i;
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_uc_data) begin
+            data_mem_pkt.index = miss_addr_i[block_offset_width_lp+:index_width_lp];
+            data_mem_pkt.way_id = lce_cmd_li.way_id;
+            data_mem_pkt.data = lce_cmd_li.msg.dt_cmd.data;
+            data_mem_pkt.opcode = e_icache_lce_data_mem_uncached;
+            data_mem_pkt_v_o = lce_cmd_v_i;
+            lce_cmd_yumi_o = data_mem_pkt_yumi_i;
 
-          uncached_data_received_o = data_mem_pkt_yumi_i;
+            uncached_data_received_o = data_mem_pkt_yumi_i;
 
-        end else if (lce_cmd_li.msg_type == e_lce_cmd_set_clear) begin
-          tag_mem_pkt.index        = lce_cmd_addr_index;
-          tag_mem_pkt.state        = e_COH_I;
-          tag_mem_pkt.tag          = '0;
-          tag_mem_pkt.opcode       = e_tag_mem_set_clear;
-          tag_mem_pkt_v_o          = lce_cmd_v_i;
-          stat_mem_pkt.index       = lce_cmd_addr_index;
-          stat_mem_pkt.opcode      = e_stat_mem_set_clear;
-          stat_mem_pkt_v_o         = lce_cmd_v_i;
-          lce_cmd_yumi_o           = tag_mem_pkt_yumi_i & stat_mem_pkt_yumi_i;
-        end
-
+          end else if (lce_cmd_li.msg_type == e_lce_cmd_set_clear) begin
+            tag_mem_pkt.index        = lce_cmd_addr_index;
+            tag_mem_pkt.state        = e_COH_I;
+            tag_mem_pkt.tag          = '0;
+            tag_mem_pkt.opcode       = e_tag_mem_set_clear;
+            tag_mem_pkt_v_o          = lce_cmd_v_i;
+            stat_mem_pkt.index       = lce_cmd_addr_index;
+            stat_mem_pkt.opcode      = e_stat_mem_set_clear;
+            stat_mem_pkt_v_o         = lce_cmd_v_i;
+            lce_cmd_yumi_o           = tag_mem_pkt_yumi_i & stat_mem_pkt_yumi_i;
+          end
       end
 
       e_lce_cmd_send_transfer: begin
