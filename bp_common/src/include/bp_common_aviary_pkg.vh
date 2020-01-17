@@ -247,8 +247,8 @@ package bp_common_aviary_pkg;
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
 
-      ,async_coh_clk       : 1
-      ,coh_noc_max_credits : 8
+      ,async_coh_clk       : 0
+      ,coh_noc_max_credits : 16
       ,coh_noc_flit_width  : 128
       ,coh_noc_cid_width   : 2
       ,coh_noc_len_width   : 3
