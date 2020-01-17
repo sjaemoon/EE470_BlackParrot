@@ -35,8 +35,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -86,8 +86,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -139,8 +139,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -190,8 +190,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -241,8 +241,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -292,8 +292,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -343,8 +343,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
@@ -394,8 +394,8 @@ package bp_common_aviary_pkg;
       ,cce_block_width      : 512
       ,cce_pc_width         : 8
 
-      ,l2_sets : 256
-      ,l2_assoc: 4
+      ,l2_sets : 128
+      ,l2_assoc: 8
 
       ,fe_queue_fifo_els: 8
       ,fe_cmd_fifo_els  : 4
