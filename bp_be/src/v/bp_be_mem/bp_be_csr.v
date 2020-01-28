@@ -707,7 +707,6 @@ assign accept_irq_o = ~is_debug_mode & (m_interrupt_icode_v_li | s_interrupt_ico
 
 // CSR slow paths
 assign frm_o        = fcsr_lo.frm;
-assign fflags_o     = fcsr_lo.fflags;
 assign satp_ppn_o       = satp_r.ppn;
 
 assign mstatus_sum_o = mstatus_lo.sum;
