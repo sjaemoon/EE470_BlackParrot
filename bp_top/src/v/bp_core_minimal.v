@@ -77,7 +77,6 @@ module bp_core_minimal
   bp_cache_tag_mem_pkt_s tag_mem_pkt;
   bp_cache_stat_mem_pkt_s stat_mem_pkt;
 
-  // TODO: fix interfaces for fe/be
   `declare_bp_fe_be_if(vaddr_width_p, paddr_width_p, asid_width_p, branch_metadata_fwd_width_p);
 
   bp_fe_queue_s fe_queue_li, fe_queue_lo;
@@ -88,6 +87,7 @@ module bp_core_minimal
   logic fe_cmd_v_li, fe_cmd_ready_lo;
   logic fe_cmd_v_lo, fe_cmd_yumi_li;
 
+  logic accept_irq_lo;
   bp_fe_top
    #(.bp_params_p(bp_params_p))
    fe
@@ -103,6 +103,8 @@ module bp_core_minimal
      ,.fe_cmd_i(fe_cmd_lo)
      ,.fe_cmd_v_i(fe_cmd_v_lo)
      ,.fe_cmd_yumi_o(fe_cmd_yumi_li)
+
+     ,.accept_irq_i(accept_irq_lo)
 
      ,.cache_req_o(cache_req_o[0])
      ,.cache_req_v_o(cache_req_v_o[0])
@@ -196,6 +198,8 @@ module bp_core_minimal
      ,.fe_cmd_v_o(fe_cmd_v_li)
      ,.fe_cmd_ready_i(fe_cmd_ready_lo)
      ,.fe_cmd_fence_i(fe_cmd_fence_li)
+
+     ,.accept_irq_o(accept_irq_lo)
 
      ,.cache_req_o(cache_req_o[1])
      ,.cache_req_v_o(cache_req_v_o[1])
