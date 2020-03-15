@@ -58,11 +58,30 @@ logic [reg_addr_width_p-1:0] rs1_reread_addr, rs2_reread_addr;
 logic [dword_width_p-1:0]    rd_data_r;
 
 localparam rf_els_lp = 2**reg_addr_width_p;
-bsg_mem_2r1w_sync 
+//bsg_mem_2r1w_sync
+// #(.width_p(dword_width_p), .els_p(rf_els_lp))
+// rf
+//  (.clk_i(clk_i)
+//   ,.reset_i(reset_i)
+//
+//   ,.w_v_i(cfg_bus.irf_w_v | rd_w_v_i)
+//   ,.w_addr_i(cfg_bus.irf_w_v ? cfg_bus.irf_addr : rd_addr_i)
+//   ,.w_data_i(cfg_bus.irf_w_v ? cfg_bus.irf_data : rd_data_i)
+//
+//   ,.r0_v_i(cfg_bus.irf_r_v | rs1_read_v)
+//   ,.r0_addr_i(cfg_bus.irf_r_v ? cfg_bus.irf_addr : rs1_reread_addr)
+//   ,.r0_data_o(rs1_reg_data)
+//
+//   ,.r1_v_i(rs2_read_v)
+//   ,.r1_addr_i(rs2_reread_addr)
+//   ,.r1_data_o(rs2_reg_data)
+//   );
+//assign cfg_data_o = rs1_reg_data;
+bsg_mem_2r1w
  #(.width_p(dword_width_p), .els_p(rf_els_lp))
  rf
-  (.clk_i(clk_i)
-   ,.reset_i(reset_i)
+  (.w_clk_i(clk_i)
+   ,.w_reset_i(reset_i)
 
    ,.w_v_i(cfg_bus.irf_w_v | rd_w_v_i)
    ,.w_addr_i(cfg_bus.irf_w_v ? cfg_bus.irf_addr : rd_addr_i)
