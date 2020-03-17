@@ -54,6 +54,13 @@ module bp_be_scheduler
   , output                             fe_queue_roll_o
   , output                             fe_queue_deq_o
 
+  , input [reg_addr_width_p-1:0]            rs1_addr_i
+  , input                                   rs1_v_i
+
+  , input [reg_addr_width_p-1:0]            rs2_addr_i
+  , input                                   rs2_v_i
+
+
   // Dispatch interface
   , output [dispatch_pkt_width_lp-1:0] dispatch_pkt_o
 
@@ -79,6 +86,7 @@ bp_be_wb_pkt_s    wb_pkt;
 
 assign isd_status_o    = isd_status;
 assign fe_queue_cast_i = fe_queue_i;
+// fixme: This width is mismatched: add opcode to rv64_instr_s
 assign fetch_instr     = fe_queue_cast_i.msg.fetch.instr;
 assign wb_pkt          = wb_pkt_i;
 
@@ -176,13 +184,21 @@ bp_be_regfile
    ,.rd_addr_i(wb_pkt.rd_addr)
    ,.rd_data_i(wb_pkt.rd_data)
 
-   ,.rs1_r_v_i(dispatch_v_i & issue_pkt.irs1_v)
-   ,.rs1_addr_i(issue_pkt.instr.fields.rtype.rs1_addr)
+   ,.rs1_r_v_i(1'b1) // fe_queue_yumi_o)
+   ,.rs1_addr_i(rs1_addr_i)
    ,.rs1_data_o(irf_rs1)
 
-   ,.rs2_r_v_i(dispatch_v_i & issue_pkt.irs2_v)
-   ,.rs2_addr_i(issue_pkt.instr.fields.rtype.rs2_addr)
+   ,.rs2_r_v_i(1'b1) //fe_queue_yumi_o)
+   ,.rs2_addr_i(rs2_addr_i)
    ,.rs2_data_o(irf_rs2)
+
+   //,.rs1_r_v_i(dispatch_v_i & issue_pkt.irs1_v)
+   //,.rs1_addr_i(issue_pkt.instr.fields.rtype.rs1_addr)
+   //,.rs1_data_o(irf_rs1)
+
+   //,.rs2_r_v_i(dispatch_v_i & issue_pkt.irs2_v)
+   //,.rs2_addr_i(issue_pkt.instr.fields.rtype.rs2_addr)
+   //,.rs2_data_o(irf_rs2)
    );
 
 // Decode the dispatched instruction

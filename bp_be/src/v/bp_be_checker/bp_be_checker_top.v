@@ -60,6 +60,12 @@ module bp_be_checker_top
    , input                            fe_queue_v_i
    , output                           fe_queue_yumi_o
 
+   , input [reg_addr_width_p-1:0]            rs1_addr_i
+   , input                                   rs1_v_i
+
+   , input [reg_addr_width_p-1:0]            rs2_addr_i
+   , input                                   rs2_v_i
+
    // Instruction issue interface
    , output [dispatch_pkt_width_lp-1:0]  dispatch_pkt_o
 
@@ -178,6 +184,11 @@ bp_be_scheduler
    ,.fe_queue_roll_o(fe_queue_roll_o)
    ,.fe_queue_deq_o(fe_queue_deq_o)
 
+   ,.rs1_addr_i(rs1_addr_i)
+   ,.rs1_v_i(rs1_v_i)
+
+   ,.rs2_addr_i(rs2_addr_i)
+   ,.rs2_v_i(rs2_v_i)
 
    ,.dispatch_pkt_o(dispatch_pkt_o)
    
