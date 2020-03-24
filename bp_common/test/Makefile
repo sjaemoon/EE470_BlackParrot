@@ -4,7 +4,7 @@ TOP ?= $(shell git rev-parse --show-toplevel)
 include $(TOP)/Makefile.common
 
 ZERO_MEM ?=$(BP_COMMON_DIR)/software/py/zero_mem.py
-MEM2NBF  ?= $(BP_COMMON_DIR)/software/py/nbf.py
+MEM2NBF  ?= $(BP_COMMON_DIR)/software/py/nbf.py --mem
 
 TEST_DIR       = $(BP_COMMON_DIR)/test
 MEM_DIR        = $(TEST_DIR)/mem
