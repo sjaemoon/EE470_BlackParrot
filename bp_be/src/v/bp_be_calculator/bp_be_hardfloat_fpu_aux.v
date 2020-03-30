@@ -15,26 +15,14 @@ module bp_be_hardfloat_fpu_aux
  import bp_common_rv64_pkg::*;
  import bp_be_pkg::*;
  import bp_be_hardfloat_pkg::*;
- #(parameter latency_p          = 2 // Used for retiming
-   , parameter dword_width_p    = 64
-   , parameter word_width_p     = 32
-   , parameter sp_exp_width_lp  = 8
-   , parameter sp_sig_width_lp  = 24
-   , parameter sp_width_lp      = sp_exp_width_lp+sp_sig_width_lp
-   , parameter dp_exp_width_lp  = 11
-   , parameter dp_sig_width_lp  = 53
-   , parameter dp_width_lp      = dp_exp_width_lp+dp_sig_width_lp
-
-   , parameter sp_rec_width_lp = sp_exp_width_lp+sp_sig_width_lp+1
-   , parameter dp_rec_width_lp = dp_exp_width_lp+dp_sig_width_lp+1
-   )
+ #(parameter latency_p = 2) // Used for retiming
   (input                        clk_i
    , input                      reset_i
 
    // Operands
    //   Can be either integers, single precision or double precision
-   , input [dword_width_p-1:0]  a_i
-   , input [dword_width_p-1:0]  b_i
+   , input [long_width_gp-1:0]  a_i
+   , input [long_width_gp-1:0]  b_i
 
    // Floating point operation to perform
    , input bp_be_fp_fu_op_e       op_i
@@ -47,18 +35,15 @@ module bp_be_hardfloat_fpu_aux
    , input rv64_frm_e             rm_i
 
 
-   , output logic [dword_width_p-1:0] o
+   , output logic [long_width_gp-1:0] o
    , output rv64_fflags_s             eflags_o
    );
 
   // The control bits control tininess, which is fixed in RISC-V
   wire [`floatControlWidth-1:0] control_li = `flControl_default;
  
-  localparam [dp_width_lp-1:0] dp_canonical = 64'h7ff80000_00000000;
-  localparam [dp_width_lp-1:0] sp_canonical = 64'hffffffff_7fc00000;
-
-  logic [dp_width_lp-1:0] a_fp_li, b_fp_li;
-  logic [dp_rec_width_lp-1:0] a_rec_li, b_rec_li;
+  logic [dp_float_width_gp-1:0] a_fp_li, b_fp_li;
+  logic [dp_rec_width_gp-1:0] a_rec_li, b_rec_li;
   logic a_is_nan_li, b_is_nan_li;
   logic a_is_snan_li, b_is_snan_li;
   logic a_is_sub_li, b_is_sub_li;
@@ -81,12 +66,12 @@ module bp_be_hardfloat_fpu_aux
  
   logic a_is_nan_lo, a_is_inf_lo, a_is_zero_lo, a_is_sub_lo;
   logic a_sgn_lo;
-  logic [dp_exp_width_lp+1:0] a_exp_lo;
-  logic [dp_sig_width_lp:0] a_sig_lo;
+  logic [dp_exp_width_gp+1:0] a_exp_lo;
+  logic [dp_sig_width_gp:0] a_sig_lo;
 
   recFNToRawFN
-   #(.expWidth(dp_exp_width_lp)
-     ,.sigWidth(dp_sig_width_lp)
+   #(.expWidth(dp_exp_width_gp)
+     ,.sigWidth(dp_sig_width_gp)
      )
    aclass
     (.in(a_rec_li)
@@ -99,18 +84,18 @@ module bp_be_hardfloat_fpu_aux
      );
   assign a_is_sub_lo = (ipr_i == e_pr_double)
                        ? ~a_is_nan_lo & ~a_is_inf_lo & ~a_is_zero_lo
-                         & (a_rec_li[dp_sig_width_lp-1+:dp_exp_width_lp+1] < (2**(dp_exp_width_lp-1) + 2))
+                         & (a_rec_li[dp_sig_width_gp-1+:dp_exp_width_gp+1] < (2**(dp_exp_width_gp-1) + 2))
                        : ~a_is_nan_lo & ~a_is_inf_lo & ~a_is_zero_lo
-                         & (a_rec_li[sp_sig_width_lp-1+:sp_exp_width_lp+1] < (2**(sp_exp_width_lp-1) + 2));
+                         & (a_rec_li[sp_sig_width_gp-1+:sp_exp_width_gp+1] < (2**(sp_exp_width_gp-1) + 2));
 
   logic b_is_nan_lo, b_is_inf_lo, b_is_zero_lo;
   logic b_sgn_lo;
-  logic [dp_exp_width_lp+1:0] b_exp_lo;
-  logic [dp_sig_width_lp:0] b_sig_lo;
+  logic [dp_exp_width_gp+1:0] b_exp_lo;
+  logic [dp_sig_width_gp:0] b_sig_lo;
 
   recFNToRawFN
-   #(.expWidth(dp_exp_width_lp)
-     ,.sigWidth(dp_sig_width_lp)
+   #(.expWidth(dp_exp_width_gp)
+     ,.sigWidth(dp_sig_width_gp)
      )
    bclass
     (.in(b_rec_li)
@@ -131,9 +116,7 @@ module bp_be_hardfloat_fpu_aux
   //
   rv64_fflags_s fcmp_eflags_lo, fcompare_eflags_lo, fminmax_eflags_lo;
 
-  localparam [dp_rec_width_lp-1:0] dp_canonical_rec = 65'h0_e0080000_00000000;
-
-  logic [dp_rec_width_lp-1:0] fminmax_lo;
+  logic [dp_rec_width_gp-1:0] fminmax_lo;
   rv64_fflags_s fcmp_nv_eflags_lo, fminmax_nv_eflags_lo;
 
   logic flt_lo, feq_lo, fgt_lo, unordered_lo;
@@ -143,8 +126,8 @@ module bp_be_hardfloat_fpu_aux
   wire is_fmin_li = (op_i == e_op_fmin);
   wire signaling_li = is_flt_li | is_fle_li;
   compareRecFN
-   #(.expWidth(dp_exp_width_lp)
-     ,.sigWidth(dp_sig_width_lp)
+   #(.expWidth(dp_exp_width_gp)
+     ,.sigWidth(dp_sig_width_gp)
      )
    fcmp
     (.a(a_rec_li)
@@ -157,7 +140,7 @@ module bp_be_hardfloat_fpu_aux
      ,.unordered(unordered_lo)
      ,.exceptionFlags(fcmp_eflags_lo)
      );
-  wire [dp_rec_width_lp-1:0] fle_lo  = ~fgt_lo;
+  wire [dp_rec_width_gp-1:0] fle_lo  = ~fgt_lo;
 
   assign fminmax_nv_eflags_lo = '{nv : (a_is_snan_li | b_is_snan_li), default: '0};
   assign fminmax_eflags_lo  = fcmp_eflags_lo | fminmax_nv_eflags_lo;
@@ -181,18 +164,18 @@ module bp_be_hardfloat_fpu_aux
 
   // FCVT
   //
-  logic [dp_rec_width_lp-1:0] i2f_lo;
+  logic [dp_rec_width_gp-1:0] i2f_lo;
   rv64_fflags_s i2f_eflags_lo;
   wire is_iu2f = (op_i == e_op_iu2f);
-  wire [dword_width_p-1:0] a_sext_li = (ipr_i == e_pr_double) 
+  wire [long_width_gp-1:0] a_sext_li = (ipr_i == e_pr_double) 
     ? a_i
     : is_iu2f
-      ? dword_width_p'($unsigned(a_i[0+:word_width_p]))
-      : dword_width_p'($signed(a_i[0+:word_width_p]));
+      ? long_width_gp'($unsigned(a_i[0+:word_width_gp]))
+      : long_width_gp'($signed(a_i[0+:word_width_gp]));
   iNToRecFN
-   #(.intWidth(dword_width_p)
-     ,.expWidth(dp_exp_width_lp)
-     ,.sigWidth(dp_sig_width_lp)
+   #(.intWidth(long_width_gp)
+     ,.expWidth(dp_exp_width_gp)
+     ,.sigWidth(dp_sig_width_gp)
      )
    i2f
     (.control(control_li)
@@ -205,35 +188,35 @@ module bp_be_hardfloat_fpu_aux
 
   // FSGNJ/FSGNJN/FSGNJX
   //
-  logic [dp_width_lp-1:0] fsgn_lo;
+  logic [dp_float_width_gp-1:0] fsgn_lo;
   rv64_fflags_s fsgn_eflags_lo;
 
   logic sgn_li;
   always_comb
     if (opr_i == e_pr_double)
       unique case (op_i)
-        e_op_fsgnj:  sgn_li =  b_fp_li[dp_width_lp-1];
-        e_op_fsgnjn: sgn_li = ~b_fp_li[dp_width_lp-1];
-        e_op_fsgnjx: sgn_li =  b_fp_li[dp_width_lp-1] ^ a_fp_li[dp_width_lp-1];
+        e_op_fsgnj:  sgn_li =  b_fp_li[dp_float_width_gp-1];
+        e_op_fsgnjn: sgn_li = ~b_fp_li[dp_float_width_gp-1];
+        e_op_fsgnjx: sgn_li =  b_fp_li[dp_float_width_gp-1] ^ a_fp_li[dp_float_width_gp-1];
         default : sgn_li = '0;
       endcase
     else
       unique case (op_i)
-        e_op_fsgnj:  sgn_li =  b_fp_li[sp_width_lp-1];
-        e_op_fsgnjn: sgn_li = ~b_fp_li[sp_width_lp-1];
-        e_op_fsgnjx: sgn_li =  b_fp_li[sp_width_lp-1] ^ a_fp_li[sp_width_lp-1];
+        e_op_fsgnj:  sgn_li =  b_fp_li[sp_float_width_gp-1];
+        e_op_fsgnjn: sgn_li = ~b_fp_li[sp_float_width_gp-1];
+        e_op_fsgnjx: sgn_li =  b_fp_li[sp_float_width_gp-1] ^ a_fp_li[sp_float_width_gp-1];
         default : sgn_li = '0;
       endcase
 
   assign fsgn_lo = (opr_i == e_pr_double)
-                   ? {sgn_li, a_fp_li[0+:dp_width_lp-1]}
-                   : {32'hffffffff, sgn_li, a_fp_li[0+:sp_width_lp-1]};
+                   ? {sgn_li, a_fp_li[0+:dp_float_width_gp-1]}
+                   : {32'hffffffff, sgn_li, a_fp_li[0+:sp_float_width_gp-1]};
   assign fsgn_eflags_lo = '0;
 
   // Recoded result selection
   //
-  logic [dp_rec_width_lp-1:0] rec_result_lo;
-  logic [dword_width_p-1:0] direct_result_lo;
+  logic [dp_rec_width_gp-1:0] rec_result_lo;
+  logic [long_width_gp-1:0] direct_result_lo;
   rv64_fflags_s rec_eflags_lo, direct_eflags_lo;
   always_comb
     begin
@@ -260,14 +243,14 @@ module bp_be_hardfloat_fpu_aux
         e_op_fsgnj, e_op_fsgnjn, e_op_fsgnjx:
           begin
             direct_result_lo = (opr_i == e_pr_single)
-                               ? {32'hffffffff, fsgn_lo[0+:word_width_p]}
+                               ? {32'hffffffff, fsgn_lo[0+:word_width_gp]}
                                : fsgn_lo;
             direct_eflags_lo = fsgn_eflags_lo;
           end
         e_op_imvf:
           begin
             direct_result_lo = (opr_i == e_pr_single)
-                               ? {32'hffffffff, a_sext_li[0+:word_width_p]}
+                               ? {32'hffffffff, a_sext_li[0+:word_width_gp]}
                                : a_sext_li;
             direct_eflags_lo = '0;
           end
@@ -280,7 +263,7 @@ module bp_be_hardfloat_fpu_aux
 
   // Recoded result selection
   //
-  logic [dp_width_lp-1:0] result_lo, fp_result_lo;
+  logic [dp_float_width_gp-1:0] result_lo, fp_result_lo;
   logic [4:0] fp_eflags_lo, dir_eflags_lo, eflags_lo;
   bp_be_hardfloat_fpu_recode_out
    recode_out
@@ -298,7 +281,7 @@ module bp_be_hardfloat_fpu_aux
   assign result_lo = is_direct_result ? direct_result_lo : fp_result_lo;
   assign eflags_lo = is_direct_result ? dir_eflags_lo : fp_eflags_lo;
   bsg_dff_chain
-   #(.width_p($bits(rv64_fflags_s)+dword_width_p)
+   #(.width_p($bits(rv64_fflags_s)+long_width_gp)
      ,.num_stages_p(latency_p-1)
      )
    retimer_chain

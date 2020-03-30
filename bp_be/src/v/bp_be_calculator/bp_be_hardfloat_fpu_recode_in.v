@@ -9,14 +9,14 @@ module bp_be_hardfloat_fpu_recode_in
    , parameter word_width_p     = 32
    , parameter sp_exp_width_lp  = 8
    , parameter sp_sig_width_lp  = 24
-   , parameter sp_width_lp      = sp_exp_width_lp+sp_sig_width_lp
+   , parameter sp_width_gp      = sp_exp_width_lp+sp_sig_width_lp
    , parameter dp_exp_width_lp  = 11
    , parameter dp_sig_width_lp  = 53
-   , parameter dp_width_lp      = dp_exp_width_lp+dp_sig_width_lp
+   , parameter dp_width_gp      = dp_exp_width_lp+dp_sig_width_lp
    , parameter els_p            = 1
 
-   , parameter sp_rec_width_lp = sp_exp_width_lp+sp_sig_width_lp+1
-   , parameter dp_rec_width_lp = dp_exp_width_lp+dp_sig_width_lp+1
+   , parameter sp_rec_width_gp = sp_exp_width_lp+sp_sig_width_lp+1
+   , parameter dp_rec_width_gp = dp_exp_width_lp+dp_sig_width_lp+1
    )
   (input [els_p-1:0][dword_width_p-1:0]      fp_i
 
@@ -24,8 +24,8 @@ module bp_be_hardfloat_fpu_recode_in
    //   floating point operands and results
    , input bp_be_fp_pr_e                     ipr_i
 
-   , output [els_p-1:0][dp_width_lp-1:0]     fp_o
-   , output [els_p-1:0][dp_rec_width_lp-1:0] rec_o
+   , output [els_p-1:0][dp_width_gp-1:0]     fp_o
+   , output [els_p-1:0][dp_rec_width_gp-1:0] rec_o
    , output [els_p-1:0]                      nan_o
    , output [els_p-1:0]                      snan_o
    , output [els_p-1:0]                      sub_o
@@ -34,9 +34,6 @@ module bp_be_hardfloat_fpu_recode_in
   // The control bits control tininess, which is fixed in RISC-V
   wire [`floatControlWidth-1:0] control_li = `flControl_default;
  
-  localparam [dp_width_lp-1:0] sp_canonical = 64'hffffffff_7fc00000;
-  localparam [dp_width_lp-1:0] dp_canonical = 64'h7ff80000_00000000;
-
   // Recode all three inputs from FP
   //   We use a pseudo foreach loop to save verbosity
   //   We also convert from 32 bit inputs to 64 bit recoded inputs. 
@@ -44,12 +41,12 @@ module bp_be_hardfloat_fpu_recode_in
   //     "Innocuous Double Rounding of Basic Arithmetic Operations" by Pierre Roux
   for (genvar i = 0; i < els_p; i++)
     begin : in_rec
-      wire nanbox_v_li = &fp_i[i][dp_width_lp-1:sp_width_lp];
+      wire nanbox_v_li = &fp_i[i][dp_width_gp-1:sp_width_gp];
 
-      wire [sp_width_lp-1:0] in_sp_li = nanbox_v_li ? fp_i[i][0+:sp_width_lp] : sp_canonical;
-      wire [dp_width_lp-1:0] in_dp_li = fp_i[i];
+      wire [sp_width_gp-1:0] in_sp_li = nanbox_v_li ? fp_i[i][0+:sp_width_gp] : sp_canonical;
+      wire [dp_width_gp-1:0] in_dp_li = fp_i[i];
 
-      logic [sp_rec_width_lp-1:0] in_sp_rec_li;
+      logic [sp_rec_width_gp-1:0] in_sp_rec_li;
       fNToRecFN
        #(.expWidth(sp_exp_width_lp)
          ,.sigWidth(sp_sig_width_lp)
@@ -59,7 +56,7 @@ module bp_be_hardfloat_fpu_recode_in
          ,.out(in_sp_rec_li)
          );
 
-      logic [dp_rec_width_lp-1:0] in_dp_rec_li;
+      logic [dp_rec_width_gp-1:0] in_dp_rec_li;
       fNToRecFN
        #(.expWidth(dp_exp_width_lp)
          ,.sigWidth(dp_sig_width_lp)
@@ -69,7 +66,7 @@ module bp_be_hardfloat_fpu_recode_in
          ,.out(in_dp_rec_li)
          );
 
-      logic [dp_rec_width_lp-1:0] in_sp2dp_rec_li;
+      logic [dp_rec_width_gp-1:0] in_sp2dp_rec_li;
       recFNToRecFN
        #(.inExpWidth(sp_exp_width_lp)
          ,.inSigWidth(sp_sig_width_lp)

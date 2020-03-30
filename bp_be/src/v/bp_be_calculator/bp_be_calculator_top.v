@@ -96,7 +96,6 @@ logic [dword_width_p-1:0] irf_rs1    , irf_rs2;
 logic [dword_width_p-1:0] frf_rs1    , frf_rs2;
 logic [dword_width_p-1:0] bypass_irs1, bypass_irs2;
 logic [dword_width_p-1:0] bypass_frs1, bypass_frs2, bypass_frs3;
-logic [dword_width_p-1:0] bypass_rs1 , bypass_rs2;
 logic [dword_width_p-1:0] bypass_rs1 , bypass_rs2, bypass_rs3;
 
 // Pipeline stage registers
@@ -481,11 +480,11 @@ assign commit_pkt.pc         = calc_stage_r[2].pc;
 assign commit_pkt.npc        = calc_stage_r[1].pc;
 assign commit_pkt.instr      = calc_stage_r[2].instr;
 
-assign int_wb_pkt.fflags_w_v  = calc_stage_r[5].fflags_w_v & ~exc_stage_r[5].poison_v;
-assign int_wb_pkt.fflags      = comp_stage_r[5].fflags;
-assign int_wb_pkt.rd_w_v      = (calc_stage_r[5].irf_w_v) & ~exc_stage_r[5].poison_v;
-assign int_wb_pkt.rd_addr     = calc_stage_r[5].instr.fields.rtype.rd_addr;
-assign int_wb_pkt.rd_data     = comp_stage_r[5].data;
+assign int_wb_pkt.fflags_w_v  = calc_stage_r[4].fflags_w_v & ~exc_stage_r[4].poison_v;
+assign int_wb_pkt.fflags      = comp_stage_r[4].fflags;
+assign int_wb_pkt.rd_w_v      = (calc_stage_r[4].irf_w_v) & ~exc_stage_r[4].poison_v;
+assign int_wb_pkt.rd_addr     = calc_stage_r[4].instr.fields.rtype.rd_addr;
+assign int_wb_pkt.rd_data     = comp_stage_r[4].data;
 
 assign fp_wb_pkt.fflags_w_v = calc_stage_r[5].fflags_w_v & ~exc_stage_r[5].poison_v;
 assign fp_wb_pkt.fflags  = comp_stage_r[5].fflags;

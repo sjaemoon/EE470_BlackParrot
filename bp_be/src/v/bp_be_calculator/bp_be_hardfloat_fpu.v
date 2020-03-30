@@ -15,27 +15,15 @@ module bp_be_hardfloat_fpu
  import bp_common_rv64_pkg::*;
  import bp_be_pkg::*;
  import bp_be_hardfloat_pkg::*;
- #(parameter latency_p          = 5 // Used for retiming
-   , parameter dword_width_p    = 64
-   , parameter word_width_p     = 32
-   , parameter sp_exp_width_lp  = 8
-   , parameter sp_sig_width_lp  = 24
-   , parameter sp_width_lp      = sp_exp_width_lp+sp_sig_width_lp
-   , parameter dp_exp_width_lp  = 11
-   , parameter dp_sig_width_lp  = 53
-   , parameter dp_width_lp      = dp_exp_width_lp+dp_sig_width_lp
-
-   , parameter sp_rec_width_lp = sp_exp_width_lp+sp_sig_width_lp+1
-   , parameter dp_rec_width_lp = dp_exp_width_lp+dp_sig_width_lp+1
-   )
+ #(parameter latency_p = 5) // Used for retiming
   (input                        clk_i
    , input                      reset_i
 
    // Operands
    //   Can be either integers, single precision or double precision
-   , input [dword_width_p-1:0]  a_i
-   , input [dword_width_p-1:0]  b_i
-   , input [dword_width_p-1:0]  c_i
+   , input [long_width_gp-1:0]  a_i
+   , input [long_width_gp-1:0]  b_i
+   , input [long_width_gp-1:0]  c_i
 
    // Floating point operation to perform
    , input bp_be_fp_fu_op_e       op_i
@@ -48,21 +36,16 @@ module bp_be_hardfloat_fpu
    , input rv64_frm_e             rm_i
 
 
-   , output logic [dword_width_p-1:0] o
+   , output logic [long_width_gp-1:0] o
    , output rv64_fflags_s             eflags_o
    );
 
   // The control bits control tininess, which is fixed in RISC-V
   wire [`floatControlWidth-1:0] control_li = `flControl_default;
  
-  logic [dword_width_p-1:0] a_li, b_li, c_li;
-
   // NaN boxing
   //
-  localparam [dp_rec_width_lp-1:0] dp_rec_1_0 = 65'h0_80000000_00000000;
-  localparam [dp_rec_width_lp-1:0] dp_rec_0_0 = 65'h0_00000000_00000000;
-
-  logic [dp_rec_width_lp-1:0] a_rec_li, b_rec_li, c_rec_li;
+  logic [dp_rec_width_gp-1:0] a_rec_li, b_rec_li, c_rec_li;
   logic a_is_nan_li, b_is_nan_li, c_is_nan_li;
   logic a_is_snan_li, b_is_snan_li, c_is_snan_li;
   logic a_is_sub_li, b_is_sub_li, c_is_sub_li;
@@ -84,7 +67,7 @@ module bp_be_hardfloat_fpu
   //
   // F[N]MADD/F[N]MSUB
   //
-  logic [dp_rec_width_lp-1:0] fma_lo;
+  logic [dp_rec_width_gp-1:0] fma_lo;
   rv64_fflags_s fma_eflags_lo;
 
   wire is_fadd_li    = (op_i == e_op_fadd);
@@ -114,16 +97,16 @@ module bp_be_hardfloat_fpu
         fma_op_li = 2'b11;
     end
 
-  wire [dp_rec_width_lp-1:0] fma_a_li = a_rec_li;
-  wire [dp_rec_width_lp-1:0] fma_b_li = is_faddsub_li ? dp_rec_1_0 : b_rec_li;
-  wire [dp_rec_width_lp-1:0] fma_c_li = is_faddsub_li
+  wire [dp_rec_width_gp-1:0] fma_a_li = a_rec_li;
+  wire [dp_rec_width_gp-1:0] fma_b_li = is_faddsub_li ? dp_rec_1_0 : b_rec_li;
+  wire [dp_rec_width_gp-1:0] fma_c_li = is_faddsub_li
                                         ? b_rec_li
                                         : is_fmul_li
                                           ? dp_rec_0_0
                                           : c_rec_li;
   mulAddRecFN
-   #(.expWidth(dp_exp_width_lp)
-     ,.sigWidth(dp_sig_width_lp)
+   #(.expWidth(dp_exp_width_gp)
+     ,.sigWidth(dp_sig_width_gp)
      )
    fma
     (.control(control_li)
@@ -138,8 +121,8 @@ module bp_be_hardfloat_fpu
 
   // Recoded result selection
   //
-  logic [dp_width_lp-1:0] fp_result_lo;
-  logic [4:0] fp_eflags_lo;
+  logic [dp_float_width_gp-1:0] fp_result_lo;
+  rv64_fflags_s fp_eflags_lo;
   bp_be_hardfloat_fpu_recode_out
    recode_out
     (.rec_i(fma_lo)
@@ -152,7 +135,7 @@ module bp_be_hardfloat_fpu
      );
 
   bsg_dff_chain
-   #(.width_p($bits(rv64_fflags_s)+dword_width_p)
+   #(.width_p($bits(rv64_fflags_s)+long_width_gp)
      ,.num_stages_p(latency_p-1)
      )
    retimer_chain
