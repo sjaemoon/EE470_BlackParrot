@@ -29,6 +29,9 @@ module bp_fe_lce_cmd
    , localparam index_width_lp=`BSG_SAFE_CLOG2(lce_sets_p)
    , localparam block_offset_width_lp=(word_offset_width_lp+byte_offset_width_lp)
    , localparam tag_width_lp=(paddr_width_p-block_offset_width_lp-index_width_lp)
+
+   // number of dword_width_p chunks required to cover cce_block_width_p
+   , localparam dwords_per_block_lp=`BSG_CDIV(cce_block_width_p, dword_width_p)
    
    , localparam bp_be_dcache_stat_width_lp = `bp_be_dcache_stat_info_width(lce_assoc_p)
 
@@ -157,9 +160,11 @@ module bp_fe_lce_cmd
 
     lce_resp = '0;
     lce_resp.header.src_id = lce_id_i;
+    lce_resp.header.data_legnth = e_lce_data_length_0;
     lce_resp_v_o = 1'b0;
 
     lce_cmd_out = '0;
+    lce_cmd_out.header.data_legnth = (bp_lce_cce_data_length_e)'(dwords_per_block_lp);
     lce_cmd_v_o = 1'b0;
 
     data_mem_pkt = '0;

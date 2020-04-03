@@ -27,7 +27,10 @@ module bp_be_dcache_lce_cmd
     , localparam index_width_lp=`BSG_SAFE_CLOG2(lce_sets_p)
     , localparam tag_width_lp=(paddr_width_p-index_width_lp-block_offset_width_lp)
     , localparam way_id_width_lp=`BSG_SAFE_CLOG2(lce_assoc_p)
-    
+
+    // number of dword_width_p chunks required to cover cce_block_width_p
+    , localparam dwords_per_block_lp=`BSG_CDIV(cce_block_width_p, dword_width_p)
+
     `declare_bp_lce_cce_if_widths(cce_id_width_p, lce_id_width_p, paddr_width_p, lce_assoc_p, dword_width_p, cce_block_width_p) 
 
     , localparam stat_info_width_lp=
@@ -271,6 +274,7 @@ module bp_be_dcache_lce_cmd
               lce_resp.header.dst_id = lce_cmd_li.header.src_id;
               lce_resp.header.src_id = lce_id_i;
               lce_resp.header.msg_type = e_lce_cce_sync_ack;
+              lce_resp.header.data_legnth = e_lce_data_length_0;
               lce_resp_v_o = lce_cmd_v_i;
               lce_cmd_yumi_o = lce_resp_yumi_i;
               state_n = ((cnt_r == cnt_width_lp'(num_cce_p-1)) & lce_resp_yumi_i)
@@ -444,6 +448,7 @@ module bp_be_dcache_lce_cmd
             lce_resp.header.msg_type = e_lce_cce_inv_ack;
             lce_resp.header.src_id = lce_id_i;
             lce_resp.header.addr = lce_cmd_li.header.addr;
+            lce_resp.header.data_legnth = e_lce_data_length_0;
             lce_resp_v_o = invalidated_tag_r | tag_mem_pkt_v;
             lce_cmd_yumi_o = lce_resp_yumi_i;
 
@@ -540,6 +545,7 @@ module bp_be_dcache_lce_cmd
         lce_cmd_out.header.way_id = lce_cmd_li.header.target_way_id;
         lce_cmd_out.header.addr = lce_cmd_li.header.addr;
         lce_cmd_out.header.state = lce_cmd_li.header.state;
+        lce_cmd_out.header.data_legnth = (bp_lce_cce_data_length_e)'(dwords_per_block_lp);
         lce_cmd_out.data = tr_data_buffered_r
           ? data_buf_r
           : data_mem_i;
@@ -616,6 +622,7 @@ module bp_be_dcache_lce_cmd
         lce_resp.header.msg_type = e_lce_cce_resp_wb;
         lce_resp.header.src_id = lce_id_i;
         lce_resp.header.dst_id = lce_cmd_li.header.src_id;
+        lce_resp.header.data_legnth = (bp_lce_cce_data_length_e)'(dwords_per_block_lp);
         lce_resp_v_o = wb_data_read_r & (wb_dirty_cleared_r | stat_mem_pkt_v);
 
         lce_cmd_yumi_o = lce_resp_done;
@@ -636,6 +643,7 @@ module bp_be_dcache_lce_cmd
         lce_resp.header.msg_type = e_lce_cce_resp_null_wb;
         lce_resp.header.src_id = lce_id_i;
         lce_resp.header.dst_id = lce_cmd_li.header.src_id;
+        lce_resp.header.data_legnth = e_lce_data_length_0;
         lce_resp_v_o = 1'b1;
 
         lce_cmd_yumi_o = lce_resp_done;

@@ -170,6 +170,7 @@ module bp_be_dcache_lce_req
     lce_req.header.src_id = lce_id_i;
     lce_req.header.msg_type = e_lce_req_type_rd;
     lce_req.header.addr = miss_addr_r;
+    lce_req.header.data_length = e_lce_data_length_0;
 
     lce_resp_v_o = 1'b0;
 
@@ -178,6 +179,7 @@ module bp_be_dcache_lce_req
     lce_resp.header.src_id = lce_id_i;
     lce_resp.header.msg_type = bp_lce_cce_resp_type_e'('0);
     lce_resp.header.addr = miss_addr_r;
+    lce_resp.header.data_length = e_lce_data_length_0;
     lce_resp.data = '0;
 
     unique case (state_r)
@@ -219,6 +221,7 @@ module bp_be_dcache_lce_req
           lce_req.header.msg_type = e_lce_req_type_uc_wr;
           lce_req.header.src_id = lce_id_i;
           lce_req.header.dst_id = req_cce_id_lo;
+          lce_req.header.data_legnth = e_lce_data_length_1;
 
           state_n = e_READY;
         end
