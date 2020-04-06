@@ -77,7 +77,7 @@ module bp_nonsynth_nbf_loader
   logic [lg_num_core_lp-1:0] core_cnt_r;
   wire core_done = (core_cnt_r == (num_core_p-1)) & io_cmd_yumi_i;
   bsg_counter_clear_up
-   #(.max_val_p(num_core_p)
+   #(.max_val_p(num_core_p-1)
      ,.init_val_p(0)
      )
    core_counter
