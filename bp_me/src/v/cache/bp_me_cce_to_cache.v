@@ -37,11 +37,11 @@ module bp_me_cce_to_cache
     // manycore-side
     , input  [cce_mem_msg_width_lp-1:0]   mem_cmd_i
     , input                               mem_cmd_v_i
-    , output                              mem_cmd_yumi_o
+    , output                              mem_cmd_ready_o
                                           
     , output [cce_mem_msg_width_lp-1:0]   mem_resp_o
     , output                              mem_resp_v_o
-    , input                               mem_resp_ready_i
+    , input                               mem_resp_yumi_i
 
     // cache-side
     , output [bsg_cache_pkt_width_lp-1:0] cache_pkt_o
@@ -77,34 +77,33 @@ module bp_me_cce_to_cache
   logic [counter_width_lp-1:0] cmd_counter_r, cmd_counter_n;
   logic [counter_width_lp-1:0] cmd_max_count_r, cmd_max_count_n;
   
-  bp_cce_mem_msg_s mem_cmd;
-  logic mem_cmd_yumi_lo;
+  bp_cce_mem_msg_s mem_cmd_cast_i;
+  logic mem_cmd_ready_lo;
   
-  assign mem_cmd = mem_cmd_i;
-  assign mem_cmd_yumi_o = mem_cmd_yumi_lo;
+  assign mem_cmd_cast_i = mem_cmd_i;
+  assign mem_cmd_ready_o = mem_cmd_ready_lo;
   
   logic [paddr_width_p-1:0] cmd_addr;
-  assign cmd_addr = mem_cmd.header.addr;
+  assign cmd_addr = mem_cmd_lo.header.addr;
   
   logic [block_size_in_words_lp-1:0][dword_width_p-1:0] cmd_data;
-  assign cmd_data = mem_cmd.data;
-  
-  
+  assign cmd_data = mem_cmd_lo.data;
+
   logic small_fifo_v_li, small_fifo_ready_lo;
   logic small_fifo_v_lo, small_fifo_yumi_li;
   bp_cce_mem_msg_s mem_resp;
   
+  bp_cce_mem_msg_s mem_cmd_lo;
   bsg_fifo_1r1w_small
- #(.width_p(cce_mem_msg_width_lp-cce_block_width_p)
-  ,.els_p(8)
-  ) small_fifo
+ #(.width_p(cce_mem_msg_width_lp), .els_p(l2_max_outstanding_p))
+  small_fifo
   (.clk_i(clk_i)
   ,.reset_i(reset_i)
   ,.v_i(small_fifo_v_li)
-  ,.data_i({mem_cmd.header.msg_type, mem_cmd.header.addr, mem_cmd.header.size, mem_cmd.header.payload})
+  ,.data_i(mem_cmd_i)
   ,.ready_o(small_fifo_ready_lo)
   ,.v_o(small_fifo_v_lo)
-  ,.data_o({mem_resp.header.msg_type, mem_resp.header.addr, mem_resp.header.size, mem_resp.header.payload})
+  ,.data_o(mem_cmd_lo)
   ,.yumi_i(small_fifo_yumi_li)
   );
   
@@ -134,8 +133,8 @@ module bp_me_cce_to_cache
     tagst_sent_n = tagst_sent_r;
     tagst_received_n = tagst_received_r;
     v_o = 1'b0;
-    mem_cmd_yumi_lo = 1'b0;
     small_fifo_v_li = 1'b0;
+    mem_cmd_ready_lo = 1'b0;
     
     cmd_state_n = cmd_state_r;
     cmd_counter_n = cmd_counter_r;
@@ -168,9 +167,10 @@ module bp_me_cce_to_cache
           : CLEAR_TAG;
       end
       READY: begin
-        if (mem_cmd_v_i & small_fifo_ready_lo)
+        mem_cmd_ready_lo = small_fifo_ready_lo;
+        if (mem_cmd_v_i)
           begin
-            case (mem_cmd.header.size)
+            case (mem_cmd_cast_i.header.size)
               e_mem_size_1
               ,e_mem_size_2
               ,e_mem_size_4
@@ -186,11 +186,11 @@ module bp_me_cce_to_cache
       end
       SEND: begin
         v_o = 1'b1;
-        case (mem_cmd.header.msg_type)
+        case (mem_cmd_lo.header.msg_type)
           e_cce_mem_rd
           ,e_cce_mem_wr
           ,e_cce_mem_uc_rd:
-            case (mem_cmd.header.size)
+            case (mem_cmd_lo.header.size)
               e_mem_size_1: cache_pkt.opcode = LB;
               e_mem_size_2: cache_pkt.opcode = LH;
               e_mem_size_4: cache_pkt.opcode = LW;
@@ -202,7 +202,7 @@ module bp_me_cce_to_cache
             endcase
           e_cce_mem_uc_wr
           ,e_cce_mem_wb   :
-            case (mem_cmd.header.size)
+            case (mem_cmd_lo.header.size)
               e_mem_size_1: cache_pkt.opcode = SB;
               e_mem_size_2: cache_pkt.opcode = SH;
               e_mem_size_4: cache_pkt.opcode = SW;
@@ -222,7 +222,6 @@ module bp_me_cce_to_cache
             cmd_counter_n = cmd_counter_r + 1;
             if (cmd_counter_r == cmd_max_count_r)
               begin
-                mem_cmd_yumi_lo = 1'b1;
                 cmd_counter_n = '0;
                 cmd_state_n = READY;
               end
@@ -250,8 +249,8 @@ module bp_me_cce_to_cache
   
   logic [dword_width_p-1:0] resp_data_n;
   logic [block_size_in_words_lp-1:0][dword_width_p-1:0] resp_data_r;
-  assign mem_resp.data = resp_data_r;
-  
+
+  assign mem_resp = '{header: mem_cmd_lo.header, data: resp_data_r};
 
   // synopsys sync_set_reset "reset_i"
   always_ff @(posedge clk_i) begin
@@ -316,8 +315,8 @@ module bp_me_cce_to_cache
           end
       end
       RESP_SEND: begin
-        mem_resp_v_lo = mem_resp_ready_i;
-        if (mem_resp_ready_i)
+        mem_resp_v_lo = 1'b1;
+        if (mem_resp_yumi_i)
           begin
             small_fifo_yumi_li = 1'b1;
             resp_state_n = RESP_READY;
